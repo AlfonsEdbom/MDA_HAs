@@ -28,3 +28,27 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Task 4
+The total variation, or all of the information, is given by the sum of all eigenvalues. The function cutoff85 below uses the formula:
+$\frac{\sum_{i=1}^{q}\lambda_i}{\sum_{i=1}^{p}\lambda_i} = 85\%$
+```{r}
+cutoff85 <- function(){
+  tot_eigv = sum(eigen_dec[["values"]])
+  i = 1
+  cond = 0
+  while(cond <= 0.85){
+    eigv = sum(eigen_dec[["values"]][1:i])
+    cond = eigv/tot_eigv
+    i = i + 1
+  }
+  return(i-1)
+}
+
+```
+
+```{r}
+num_pcs <- cutoff85()
+num_pcs # number of pcs required for keeping  85% the information
+```
+
