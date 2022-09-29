@@ -102,3 +102,46 @@ train_labels = Five_Six_w_labels[id, 1]
 test_dat = data.frame(train_labels, PC1, PC2)
 ```
 
+This new dataframe is separated further into two dataframes: train_fives and train_sixs:
+```{r}
+# separate 5s and 6s
+train_fives = test_dat[which(test_dat[,1]==5),2:3]
+train_sixs = test_dat[which(test_dat[,1]==6),2:3]
+
+```
+
+This is done in order to calculate the covariance matrix and mean vectors for both groups, these will then be used in the GMM classifier for prediction.
+```{r}
+# Get statistics for 5s and 6s
+mu5 = colMeans(train_fives)
+S5 = cov(train_fives)
+
+mu6 = colMeans(train_sixs)
+S6 = cov(train_sixs)
+```
+
+The principal components for the testing data is handled the same way as the training data, using the same eigenvectors being the important part.
+```{r}
+# Get test data
+
+test_mu = colMeans(test_data)
+
+test_PC1 = numeric(length(test_data[, 1]))
+test_PC2 = numeric(length(test_data[, 1]))
+
+for (i in 1:length(test_data[, 1])) {
+  z1 = t(test_data[i, ]- test_mu) %*% eigen_vec[, 1]
+  z2 = t(test_data[i, ]- test_mu) %*% eigen_vec[, 2]
+  
+  test_PC1[i] = z1
+  test_PC2[i] = z2
+}
+```
+
+we then build a new dataframe (like we did for the training data), only consisting of labels and the principal components.
+```{r}
+# create new dataframe with labels and principal components for test data
+test_labels = Five_Six_w_labels[-id, 1]
+test_dat = data.frame(test_labels, test_PC1, test_PC2)
+```
+
