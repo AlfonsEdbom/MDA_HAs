@@ -52,3 +52,53 @@ num_pcs <- cutoff85()
 num_pcs # number of pcs required for keeping  85% the information
 ```
 To keep 85% of the total information we only need 33 principal components.
+
+## Task 5
+In this task we will build a Gaussian mixture model using the first two principal components. This GMM will then be used to classify images as a five or six. First, all the images of fives and sixes need to be separated from the rest, then the all the images of fives and sixes need to be separated into a training set and testing set. The eigendecomposition is done the on covariance matrix from the training set, the eigenvectors from the decompistion will then be used to calculate the first two principal components for both the training and testing set.
+
+```{r}
+# Task 5
+Five_Six <- data[which(data[,1]==5 | data[,1] == 6),2:257]
+Five_Six_w_labels <- data[which(data[,1]==5 | data[,1] == 6),1:257]
+
+n = dim(Five_Six)[1] # sample size
+set.seed(2022)
+id = sample(1:n, floor(0.8*n)) 
+train_data = Five_Six[id, ] # training set
+test_data = Five_Six[-id, ] # testing set
+
+
+S = cov(train_data) # training covariance matrix
+mu = colMeans(train_data) # mean vector
+
+# eigen decomposition of covariance matrix
+eigen_dec = eigen(S) 
+eigen_val = eigen_dec$values
+eigen_vec = eigen_dec$vectors
+```
+
+The first two principal components from the decomposition:
+```{r}
+# Get the first 2 principal components for train data
+PC1 = numeric(length(train_data[, 1]))
+PC2 = numeric(length(train_data[, 1]))
+```
+
+Calculate the first two principal components for the training set:
+```{r}
+for (i in 1:length(train_data[, 1])){
+  z1 = t(train_data[i, ] - mu) %*% eigen_vec[, 1]
+  z2 = t(train_data[i, ] - mu) %*% eigen_vec[, 2]
+  
+  PC1[i] = z1
+  PC2[i] = z2
+}
+```
+
+We then create a new data frame containing only the labels as well as the principal components:
+```{r}
+# create new dataframe with labels and principal components for train data
+train_labels = Five_Six_w_labels[id, 1]
+test_dat = data.frame(train_labels, PC1, PC2)
+```
+
