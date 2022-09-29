@@ -145,3 +145,31 @@ test_labels = Five_Six_w_labels[-id, 1]
 test_dat = data.frame(test_labels, test_PC1, test_PC2)
 ```
 
+The new dataframes are done, classification can begin. The following functions are repurposed from HA1, with slight modifications.
+```{r}
+# classifier functions
+exponent = function(my_vector, row_observation, cov_matrix){
+  x = as.vector(row_observation) - as.vector(my_vector)
+  result = exp(-t(t(x)) %*% solve(cov_matrix) %*% t(x)/2)
+  return(result)
+}
+
+# The base/quota of the multinomial distribution
+base = function(cov_matrix, p){
+  result <- 1/(((2*pi)^(p/2))*sqrt(det(cov_matrix)))
+  return(result)
+}
+
+# classify an observation as malignant=1, benign = 0
+classifier <- function(row_observation, five_prob, six_prob){
+  five <- base(S5, length(row_observation)) * exponent(mu5, row_observation, S5) * five_prob
+  six <- base(S6, length(row_observation)) * exponent(mu6, row_observation, S6) * six_prob
+  if (six > five){
+    prediction <- 6
+  } else{
+    prediction <- 5
+  }
+  return(prediction)
+}
+```
+
