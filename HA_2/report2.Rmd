@@ -32,7 +32,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 ## Task 4
 The total variation, or all of the information, is given by the sum of all eigenvalues. The function cutoff85 below uses the formula:
 $\frac{\sum_{i=1}^{q}\lambda_i}{\sum_{i=1}^{p}\lambda_i} = 85\%$
-to calculate the amount of principal components required for keeping 85% of the total information (or variation).
+to calculate the number of principal components required for keeping 85% of the total information (or variation).
 ```{r}
 cutoff85 <- function(){
   tot_eigv = sum(eigen_dec[["values"]])
