@@ -84,7 +84,7 @@ PC1 = numeric(length(train_data[, 1]))
 PC2 = numeric(length(train_data[, 1]))
 ```
 
-Calculate the first two principal components for the training set:
+Calculate the first two principal components for all images in the training set:
 ```{r}
 for (i in 1:length(train_data[, 1])){
   z1 = t(train_data[i, ] - mu) %*% eigen_vec[, 1]
@@ -95,7 +95,7 @@ for (i in 1:length(train_data[, 1])){
 }
 ```
 
-We then create a new data frame containing only the labels as well as the principal components:
+We then create a new dataframe containing only the labels as well as the principal components:
 ```{r}
 # create new dataframe with labels and principal components for train data
 train_labels = Five_Six_w_labels[id, 1]
@@ -110,7 +110,7 @@ train_sixs = test_dat[which(test_dat[,1]==6),2:3]
 
 ```
 
-This is done in order to calculate the covariance matrix and mean vectors for both groups, these will then be used in the GMM classifier for prediction.
+This is done in order to calculate the covariance matrix and mean vectors for both groups (5s and 6s), these will then be used in the GMM classifier for prediction.
 ```{r}
 # Get statistics for 5s and 6s
 mu5 = colMeans(train_fives)
@@ -138,14 +138,14 @@ for (i in 1:length(test_data[, 1])) {
 }
 ```
 
-we then build a new dataframe (like we did for the training data), only consisting of labels and the principal components.
+We then build a new dataframe (like we did for the training data), only consisting of labels and the principal components.
 ```{r}
 # create new dataframe with labels and principal components for test data
 test_labels = Five_Six_w_labels[-id, 1]
 test_dat = data.frame(test_labels, test_PC1, test_PC2)
 ```
 
-The new dataframes are done, classification can begin. The following functions are repurposed from HA1, with slight modifications.
+The new dataframes are done, classification soon be done. The following functions are repurposed from HA1, with slight modifications.
 ```{r}
 # classifier functions
 exponent = function(my_vector, row_observation, cov_matrix){
@@ -171,5 +171,60 @@ classifier <- function(row_observation, five_prob, six_prob){
   }
   return(prediction)
 }
+```
+
+If the image is predicted to be a five, the numbers five is returned, if the image is predicted to be a six, a six is returned. Before we can start classifying we need the initial probabilities of getting a five and six, respectively.
+```{r}
+five_prob = length(train_fives[,1]) / length(train_data[, 1]) 
+six_prob = length(train_sixs[,1]) / length(train_data[, 1])
+```
+
+The classifying is done in the for-loop below.
+```{r}
+num_five = 0
+num_six = 0
+pred_col <- c()
+for (i in 1:nrow(test_dat)) {
+  guess <- classifier(test_dat[i, 2:3], five_prob, six_prob) # return 5 or 6
+  if(guess == 5){ # guess is 5=five
+    num_five = num_five + 1
+    pred_col <- append(pred_col, 5)
+  }else{ # guess is 6=six
+    num_six = num_six + 1
+    pred_col <- append(pred_col, 6)
+  }
+}
+```
+
+Print the number of fives and sixes.
+```{r}
+# Print number of malignant and benign in test data
+num_five
+num_six
+```
+
+The accuracy of the classifier is calculated by going through the test data and see if the label (a 5 or 6) matches the number given by the classifier.
+```{r}
+# Calculate the classifier accuracy
+cor_pred <- 0
+wr_pred <- 0
+for (i in 1:length(pred_col)){
+  if(pred_col[i]==5 & test_dat[i,1]==5){ # if predict = 1 and diagnosis = "M"
+    cor_pred <- cor_pred + 1
+  }
+  if(pred_col[i]==6 & test_data[i,1]==6){ # if predict = 0 and diagnosis = "B"
+    cor_pred <- cor_pred + 1
+  }
+}
+```
+
+The accuracy of the classifier:
+```{r}
+accuracy = cor_pred / length(pred_col)
+accuracy
+
+
+cor_pred
+wr_pred
 ```
 
