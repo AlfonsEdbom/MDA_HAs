@@ -8,7 +8,7 @@ data = subset(data, C_D_Length1 != "M" & C_D_Length2 != "M" & C_D_Length3 != "M"
 data = as.matrix(data)
 data = matrix(as.numeric(data), ncol = ncol(data))
 
-# Contrask matrix
+# Contrast matrix
 (C = matrix(cbind(c(1,1), -diag(2)), 2, 3))
 
 # Difference matrix

@@ -33,16 +33,18 @@ group_2 = matrix(as.numeric(group_2), ncol = ncol(group_2))
 (S2 = cov(group_2))
 (n2 = dim(group_2)[1])
 
-D = group_1 - group_2
 
 # Pooled variance
 (Sp = ((n1 -1) / (n1 + n2 -2))*S1 + ((n2 -1) / (n1 + n2 -2))*S2)
 
-# Hotelling T2 - test
-(T2 <- n*t(colMeans(data))%*%t(C)%*%solve(C%*%cov(data)%*%t(C))%*%C%*%colMeans(data))
 
 # See result 6.2 / ex. page 287
 (T2 <- t((mu1 - mu2)) %*% solve(((1/n1)+(1/n2)*Sp)) %*% t(t(mu1-mu2)))
 (cv <- ((p*(n1+n2-2))/(n1+n2-p-1))* qf(0.95, p,n1+n2-p-1))
 
 # No significant difference??
+
+
+
+# Dont do this, normal Hotelling T2 - test
+(T2 <- n*t(colMeans(data))%*%t(C)%*%solve(C%*%cov(data)%*%t(C))%*%C%*%colMeans(data))
