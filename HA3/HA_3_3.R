@@ -25,6 +25,7 @@ group_2 = matrix(as.numeric(group_2), ncol = ncol(group_2))
 
 # get statistics for each group
 (p = dim(group_1)[2])
+
 (mu1 = colMeans(group_1))
 (S1 = cov(group_1))
 (n1 = dim(group_1)[1])
