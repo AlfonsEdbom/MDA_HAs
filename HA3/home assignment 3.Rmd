@@ -1,0 +1,153 @@
+# Task 3
+
+Consider the four variables that measure strengths in Quadriceps and Hamstrings (both concentric and eccentric) in the injured knees. Test if there is a difference **between the two treatment groups**. If there is a difference between treatment groups, find out between which variables there are differences.
+
+**Answer**:
+
+This is a problem where we want to compare the mean vectors for two different populations. Let $\boldsymbol{\mu_1}, \boldsymbol{\mu_2}$ where  $\boldsymbol{\mu_1}$ is the mean vector for patients from group 1 and  $\boldsymbol{\mu_1}$ is for group 2.
+
+For this question, our null hypothesis and alternative hypothesis will thus be:
+$$
+H0:μ1−μ2=0 \\
+H1:μ1−μ2 \ne 0
+$$
+First, the data set is separated into the 2 different treatment groups:
+
+```{r}
+library(readxl)
+
+data = read_excel("Knee.xlsx")
+
+
+# Get the knee strength data for the different groups
+group_1 = data[which(data[, 5]==1),c(51,53,55,57)]
+group_2 = data[which(data[, 5]==2),c(51,53,55,57)]
+
+
+# Remove rows containing missing data
+group_1 <- subset(group_1, I_Q_conNm_weight != "M" & I_Q_eccNm_weight != "M"
+                  & I_H_conNm_weight != "M" & I_H_eccNm_weight != "M")
+
+group_2 <- subset(group_2, I_Q_conNm_weight != "M" & I_Q_eccNm_weight != "M"
+                  & I_H_conNm_weight != "M" & I_H_eccNm_weight != "M")
+
+# Convert into numerical matrix
+group_1 = as.matrix(group_1)
+group_1 = matrix(as.numeric(group_1), ncol = ncol(group_1))
+
+group_2 = as.matrix(group_2)
+group_2 = matrix(as.numeric(group_2), ncol = ncol(group_2))
+```
+
+This is the relevant statistics for both groups:
+
+```{r}
+(p = dim(group_1)[2]) # num variables
+
+# Group 1
+(mu1 = colMeans(group_1))
+(S1 = cov(group_1))
+(n1 = dim(group_1)[1])
+
+# Group 2
+(mu2 = colMeans(group_2))
+(S2 = cov(group_2))
+(n2 = dim(group_2)[1])
+
+```
+
+We assume that S1 and S2 are approximately equal and conclude that it is reasonable to pool them, we get:
+
+```{r}
+(Sp = ((n1 -1) / (n1 + n2 -2))*S1 + ((n2 -1) / (n1 + n2 -2))*S2)
+```
+
+Then, using **result 6.2** from the book, we can calculate the 95% confidence region using Hotelling’s $T^2$ to determine if there is a significant difference between the populations means:
+
+```{r}
+(T2 <- t((mu1 - mu2)) %*% solve(((1/n1)+(1/n2)*Sp)) %*% t(t(mu1-mu2)))
+(cv <- ((p*(n1+n2-2))/(n1+n2-p-1))* qf(0.95, p,n1+n2-p-1))
+```
+
+Since `r T2` < `r cv` we cannot reject our null hypothesis and thus conclude that there is **no significant difference** in knee strength between the different treatment groups.
+
+
+# Task 4
+
+Consider the four variables Quadriceps and Hamstrings (both concentric and eccentric) for the injured knees for all subjects. Conduct a MANOVA to **test if the Treatment group and Gender affect the responses**. If significant results are found, proceed with appropriate univariate analyses. 
+
+**Answer**:
+
+In this task we want to investigate if the treatment group and/or the gender affects the strength in the injured leg. MANOVA is an appropriate tool for this and will be used in this task.
+
+First we prepare the data set:
+
+```{r}
+library(readxl)
+
+data = read_excel("Knee.xlsx")
+
+data = data[,c(2, 5, 51,53,55,57)]
+
+data = subset(data, I_Q_conNm_weight != "M" & I_Q_eccNm_weight != "M"
+              & I_H_conNm_weight != "M" & I_H_eccNm_weight != "M")
+
+data = as.matrix(data)
+data = matrix(as.numeric(data), ncol = ncol(data))
+data = data.frame(data)
+
+
+names(data) <- c("Gender", "Group", "Q_Con", "Q_Ecc", "H_Con", "H_Ecc")
+data$Gender= as.factor(data$Gender)
+data$Group= as.factor(data$Group)
+```
+
+Then we do a MANOVA, using the gender and group variables as factors and the strength variables as responses:
+
+```{r}
+m_F <- manova(cbind(Q_Con, Q_Ecc, H_Con, H_Ecc) ~ Gender * Group, data = data)
+summary(m_F, test="Wilks")
+```
+
+By looking at the p-values, we can see that both the gender and group factors are significant, while the interaction effect is not significant. We therefore continue doing another MANOVA, and this time ignoring the interaction coefficient:
+
+```{r}
+m_R <- manova(cbind(Q_Con, Q_Ecc, H_Con, H_Ecc) ~ Gender + Group, data = data)
+summary(m_R, test="Wilks")
+```
+
+Here, we can see that both the gender and group factors are significant. To continue investigating which response variable(s) are responsible for this difference we can do ANOVA tests between each response variable and the different groups:
+
+```{r}
+anova_Q_Con = aov(data$Q_Con~data$Group * data$Gender)
+summary(anova_Q_Con)
+
+anova_Q_Ecc = aov(data$Q_Ecc~data$Group * data$Gender)
+summary(anova_Q_Ecc)
+
+anova_H_Con = aov(data$H_Con~data$Group * data$Gender)
+summary(anova_H_Con)
+
+anova_H_Ecc = aov(data$H_Ecc~data$Group * data$Gender)
+summary(anova_H_Ecc)
+```
+
+In the above tests we can see that all interaction coefficients are not significant and we continue without this effect:
+
+```{r}
+anova_Q_Con = aov(data$Q_Con~data$Group + data$Gender)
+summary(anova_Q_Con)
+
+anova_Q_Ecc = aov(data$Q_Ecc~data$Group + data$Gender)
+summary(anova_Q_Ecc)
+
+anova_H_Con = aov(data$H_Con~data$Group + data$Gender)
+summary(anova_H_Con)
+
+anova_H_Ecc = aov(data$H_Ecc~data$Group + data$Gender)
+summary(anova_H_Ecc)
+```
+
+From these tests we can finally see that both factors have a significant effect on the muscle strength, except for the group factor in the concentric hamstring exercise.
+
+We can then with a high confidence conclude that **both the treatment group and the gender affects the muscle strength in the injured leg**.
